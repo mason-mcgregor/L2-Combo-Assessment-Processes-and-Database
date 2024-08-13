@@ -2,17 +2,17 @@ import sqlite3
 
 conn = sqlite3.connect('film-collection.db')
 
-# conn.execute('''CREATE TABLE Genre_Table
-# (Genre_ID INTEGER primary key,
-# Genre_Title TEXT)''')
+conn.execute('''CREATE TABLE Genre_Table
+(Genre_ID INTEGER primary key,
+Genre_Title TEXT)''')
 
-# print("Genre table crated successfully")
+print("Genre table crated successfully")
 
-# conn.execute('''CREATE TABLE Rating_Table
-# (Rating_ID INTEGER primary key,
-# Rating_Title TEXT)''')
+conn.execute('''CREATE TABLE Rating_Table (
+    Rating_ID INTEGER primary key,
+    Rating_Title TEXT)''')
 
-# print("Rating table crated successfully")
+print("Rating table crated successfully")
 
 conn.execute('''CREATE TABLE Movie_Collection (
     Movie_ID INTEGER PRIMARY KEY,
