@@ -20,15 +20,18 @@ if menu_action == 'View':
             items += f"{item} "
         output += f"{items} \n"
         items = ""
-        
+    
     easygui.msgbox(output)
 
 if menu_action == 'Add':
-    new_movie_name = easygui.enterbox("What is the movie name?")
-    new_movie_release_date = easygui.enterbox("When was the movie released?")
-    new_movie_rating = easygui.enterbox("What is the movies rating?")
-    new_movie_run_time = easygui.enterbox("How long does the movie run for?")
-    new_movie_genre =easygui.enterbox("What Genre is the movie?")
+   ENTRIES = ["Movie Name", "Movie Release Date", "Movie Rating", "Movie Run Time", "Movie Genre"]
+   add_movie_data = easygui.multenterbox("Enter in the details of your Movie!", title="Add Movie", fields=ENTRIES)
+
+if menu_action == 'Search':
+    for row in cursor.execute("SELECT * FROM movie_collection_table ORDER BY ID ASC"):
+        id, movie_name, movie_release_date, movie_rating, movie_run_time, movie_genre = row
+        output += f"{row} \n"
+    searched_movie = easygui.choicebox("What Movie do you want to veiw?", choices=output)
 
 
 
