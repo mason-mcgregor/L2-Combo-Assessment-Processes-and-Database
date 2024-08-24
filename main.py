@@ -22,7 +22,13 @@ if menu_action == 'View':
         items = ""
         
     easygui.msgbox(output)
-    
+
+if menu_action == 'Add':
+    new_movie_name = easygui.enterbox("What is the movie name?")
+    new_movie_release_date = easygui.enterbox("When was the movie released?")
+    new_movie_rating = easygui.enterbox("What is the movies rating?")
+    new_movie_run_time = easygui.enterbox("How long does the movie run for?")
+    new_movie_genre =easygui.enterbox("What Genre is the movie?")
 
 
 
