@@ -4,7 +4,7 @@ from tabulate import tabulate
 
 MENU_BUTTONS = ['Add', 'View', 'Search', 'Delete', 'Exit']
 MENU_TITLE = "Main menu"
-VIEW_HEADERS = ["ID", "Name", "Release Date", "Rating", "Run Time", "Genre"]
+VIEW_HEADERS = ["ID","Name","Year","Rating","Length","Genre"]
 
 conn = sqlite3.connect('film-collection.db')
 cursor = conn.cursor()
@@ -21,7 +21,7 @@ if menu_action == 'View':
         output.append(row)
     print(output)
     
-    easygui.buttonbox(tabulate(output, headers=VIEW_HEADERS))
+    easygui.msgbox(tabulate(output, headers=VIEW_HEADERS))
 
 
 if menu_action == 'Add':
