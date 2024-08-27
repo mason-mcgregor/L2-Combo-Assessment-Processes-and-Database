@@ -5,23 +5,30 @@ from tabulate import tabulate
 MENU_BUTTONS = ['Add', 'View', 'Search', 'Delete', 'Exit']
 MENU_TITLE = "Main menu"
 VIEW_HEADERS = ["ID","Name","Year","Rating","Length","Genre"]
+FILTER_CHOICES = ["Ascending", "Descending", "Id", "Name", "Year", "Rating", "Length", "Genre", "Exit"]
 
 conn = sqlite3.connect('film-collection.db')
 cursor = conn.cursor()
 
 
-output = []
+
 items =""
+
 
 menu_action = easygui.buttonbox("Welcome to your Movie Catalog!", title=MENU_TITLE, choices=MENU_BUTTONS)
 
 if menu_action == 'View':
-    for row in cursor.execute("SELECT movie_collection_table.id, movie_name, movie_release_date, movie_rating, movie_run_time, genre FROM movie_collection_table INNER JOIN genre_table ON movie_collection_table.movie_genre=genre_table.ID ORDER BY movie_collection_table.ID ASC"):
-        id, movie_name, movie_release_date, movie_rating, movie_run_time, genre = row
-        output.append(row)
-    print(output)
-    
-    easygui.msgbox(tabulate(output, headers=VIEW_HEADERS))
+    sort = "ASC"
+    filter = "movie_collection_table.ID"
+    while not sort == "exit":
+        output = cursor.execute(f"SELECT movie_collection_table.id, movie_name, movie_release_date, movie_rating, movie_run_time, genre FROM movie_collection_table INNER JOIN genre_table ON movie_collection_table.movie_genre=genre_table.ID ORDER BY {filter} {sort}")
+        veiw_sort = easygui.choicebox(tabulate(output, headers=VIEW_HEADERS), choices=FILTER_CHOICES)
+        if veiw_sort == "Descending":
+            sort = "DESC"
+        elif veiw_sort == "Ascending":
+            sort = "ASC"
+        else:
+            sort = "exit"
 
 
 if menu_action == 'Add':
