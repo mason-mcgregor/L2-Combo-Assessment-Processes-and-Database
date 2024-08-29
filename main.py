@@ -10,10 +10,7 @@ FILTER_CHOICES = ["Ascending", "Descending", "Id", "Name", "Year", "Rating", "Le
 conn = sqlite3.connect('film-collection.db')
 cursor = conn.cursor()
 
-
-
 items =""
-
 
 menu_action = easygui.buttonbox("Welcome to your Movie Catalog!", title=MENU_TITLE, choices=MENU_BUTTONS)
 
