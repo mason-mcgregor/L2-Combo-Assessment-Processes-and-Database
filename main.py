@@ -27,6 +27,18 @@ if menu_action == 'View':
             sort = "DESC"
         elif veiw_sort == "Ascending":
             sort = "ASC"
+        elif veiw_sort == "Id":
+            filter = "movie_collection_table.ID"
+        elif veiw_sort == "Name":
+            filter = "movie_collection_table.movie_name"
+        elif veiw_sort == "Year":
+            filter = "movie_collection_table.movie_release_date"
+        elif veiw_sort == "Rating":
+            filter = "movie_collection_table.movie_rating"
+        elif veiw_sort == "Length":
+            filter = "movie_collection_table.movie_run_time"
+        elif veiw_sort == "Genre":
+            filter = "movie_collection_table.movie_genre"
         else:
             sort = "exit"
 
