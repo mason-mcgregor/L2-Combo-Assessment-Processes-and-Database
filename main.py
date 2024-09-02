@@ -43,11 +43,9 @@ if menu_action == 'Add':
    add_movie_data = easygui.multenterbox("Enter in the details of your Movie!", title="Add Movie", fields=ENTRIES)
 
 if menu_action == 'Search':
-    choice_list = []
-    for row in cursor.execute("SELECT movie_name FROM movie_collection_table ORDER BY ID ASC"):
-        movie_name = row[0] + " - " + row[1]
-        choice_list.append(movie_name)
-    searched_movie = easygui.choicebox("What Movie do you want to veiw?", choices=choice_list)
+    searched_movie = easygui.enterbox("What is the name of your movie?")
+    output = cursor.execute(f"SELECT movie_collection_table.id, movie_name, movie_release_date, movie_rating, movie_run_time, genre FROM movie_collection_table INNER JOIN genre_table ON movie_collection_table.movie_genre=genre_table.ID WHERE movie_collection_table.movie_name LIKE '%{searched_movie}%' ORDER BY movie_collection_table.ID ASC")
+    easygui.msgbox(tabulate(output, headers=VIEW_HEADERS))
 
 
 
