@@ -5,7 +5,7 @@ from tabulate import tabulate
 MENU_BUTTONS = ['Add', 'View', 'Search', 'Delete', 'Exit']
 MENU_TITLE = "Main menu"
 VIEW_HEADERS = ["ID","Name","Year","Rating","Length","Genre"]
-FILTER_CHOICES = ["Descending","Id", "Name", "Year", "Rating", "Length", "Genre"]
+FILTER_CHOICES = ["Ascending", "Descending","Id", "Name", "Year", "Rating", "Length", "Genre"]
 
 conn = sqlite3.connect('film-collection.db')
 cursor = conn.cursor()
