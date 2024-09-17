@@ -39,6 +39,18 @@ def search():
         global choices
         choices = [row[0] for row in cursor.fetchall()]
 
+def genre_call():
+    cursor.execute("SELECT genre FROM genre_table")
+    genres = cursor.fetchall()
+    global genre_list
+    genre_list = [genre[0] for genre in genres]
+
+def rating_call():
+    cursor.execute("SELECT key FROM rating_table")
+    ratings = cursor.fetchall()
+    global rating_list
+    rating_list = [rating[0] for rating in ratings]
+
 while True:
 
     menu_action = easygui.buttonbox("Welcome to your Movie Catalog!", title=MENU_TITLE, choices=MENU_BUTTONS)
@@ -70,13 +82,9 @@ while True:
 
     if menu_action == 'Add':
 
-        cursor.execute("SELECT genre FROM genre_table")
-        genres = cursor.fetchall()
-        genre_list = [genre[0] for genre in genres]
+        genre_call()
 
-        cursor.execute("SELECT key FROM rating_table")
-        ratings = cursor.fetchall()
-        rating_list = [rating[0] for rating in ratings]
+        rating_call()
 
         feild_names = ["Day", "Month", "Year"]
         movie_release_date = []
@@ -161,10 +169,11 @@ while True:
             edit_movie = easygui.choicebox(f"Select the movie to Edit:\n\n{formatted_output}", choices=choices)
 
             cursor.execute(f"""
-                SELECT *
-                FROM movie_collection_table 
+                SELECT movie_collection_table.id, movie_name, movie_release_date, movie_rating, movie_run_time, genre
+                FROM movie_collection_table
+                INNER JOIN genre_table ON movie_collection_table.movie_genre = genre_table.ID
                 WHERE movie_collection_table.movie_name LIKE ?
-                """, (f'%{edit_movie}%',))
+            """, (f'%{edit_movie}%',))
             
             output = cursor.fetchall()
 
@@ -183,10 +192,11 @@ while True:
                 
                     conn.commit()
 
-                    cursor.execute("""
-                        SELECT *
-                        FROM movie_collection_table 
-                        WHERE movie_name LIKE ?
+                    cursor.execute(f"""
+                        SELECT movie_collection_table.id, movie_name, movie_release_date, movie_rating, movie_run_time, genre
+                        FROM movie_collection_table
+                        INNER JOIN genre_table ON movie_collection_table.movie_genre = genre_table.ID
+                        WHERE movie_collection_table.movie_name LIKE ?
                         """, (f'%{edit_movie}%',))
 
                     output = cursor.fetchall()
@@ -209,10 +219,11 @@ while True:
 
                     edit_movie = new_name_value
 
-                    cursor.execute("""
-                        SELECT *
-                        FROM movie_collection_table 
-                        WHERE movie_name LIKE ?
+                    cursor.execute(f"""
+                        SELECT movie_collection_table.id, movie_name, movie_release_date, movie_rating, movie_run_time, genre
+                        FROM movie_collection_table
+                        INNER JOIN genre_table ON movie_collection_table.movie_genre = genre_table.ID
+                        WHERE movie_collection_table.movie_name LIKE ?
                         """, (f'%{edit_movie}%',))
 
                     output = cursor.fetchall()
@@ -222,7 +233,111 @@ while True:
                     if edit_catagory == "No":
                         edit_repeat = False
 
+                elif edit_catagory == 'Year':
+                    feild_names = ["Day", "Month", "Year"]
+                    movie_release_date = []
+                    new_movie_release_date = easygui.multenterbox("ENter the movie release date", fields=feild_names)
 
-                    
+                    new_movie_date = (""+new_movie_release_date[2]+"-"+new_movie_release_date[1]+"-"+new_movie_release_date[0]+"")
 
-        
+                    conn.execute("""
+                    UPDATE movie_collection_table
+                    SET movie_release_date = ?
+                    WHERE movie_name LIKE ?
+                    """, (new_movie_date, f'%{edit_movie}%'))
+                
+                    conn.commit()
+
+                    cursor.execute(f"""
+                        SELECT movie_collection_table.id, movie_name, movie_release_date, movie_rating, movie_run_time, genre
+                        FROM movie_collection_table
+                        INNER JOIN genre_table ON movie_collection_table.movie_genre = genre_table.ID
+                        WHERE movie_collection_table.movie_name LIKE ?
+                        """, (f'%{edit_movie}%',))
+
+                    output = cursor.fetchall()
+
+                    edit_catagory = easygui.buttonbox(f"Updated Movie:\n\n{tabulate(output, headers=VIEW_HEADERS)}\n\nAnother Edit?", choices=['Yes', 'No'])
+
+                    if edit_catagory == "No":
+                        edit_repeat = False
+
+                elif edit_catagory == 'Rating':
+                    rating_call()
+                    new_rating_value = easygui.choicebox(f"Select new Rating for {edit_movie}:", choices=rating_list)
+
+                    conn.execute("""
+                    UPDATE movie_collection_table
+                    SET movie_rating = ?
+                    WHERE movie_name LIKE ?
+                    """, (new_rating_value, f'%{edit_movie}%'))
+                
+                    conn.commit()
+
+                    cursor.execute(f"""
+                        SELECT movie_collection_table.id, movie_name, movie_release_date, movie_rating, movie_run_time, genre
+                        FROM movie_collection_table
+                        INNER JOIN genre_table ON movie_collection_table.movie_genre = genre_table.ID
+                        WHERE movie_collection_table.movie_name LIKE ?
+                        """, (f'%{edit_movie}%',))
+
+
+                    output = cursor.fetchall()
+
+                    edit_catagory = easygui.buttonbox(f"Updated Movie:\n\n{tabulate(output, headers=VIEW_HEADERS)}\n\nAnother Edit?", choices=['Yes', 'No'])
+
+                    if edit_catagory == "No":
+                        edit_repeat = False
+
+                elif edit_catagory == 'Length':
+                    new_length_value = easygui.integerbox(f"Enter new Run Time for {edit_movie}:", upperbound=1000)
+
+                    conn.execute("""
+                    UPDATE movie_collection_table
+                    SET movie_run_time = ?
+                    WHERE movie_name LIKE ?
+                    """, (new_length_value, f'%{edit_movie}%'))
+                
+                    conn.commit()
+
+                    cursor.execute(f"""
+                        SELECT movie_collection_table.id, movie_name, movie_release_date, movie_rating, movie_run_time, genre
+                        FROM movie_collection_table
+                        INNER JOIN genre_table ON movie_collection_table.movie_genre = genre_table.ID
+                        WHERE movie_collection_table.movie_name LIKE ?
+                        """, (f'%{edit_movie}%',))
+
+                    output = cursor.fetchall()
+
+                    edit_catagory = easygui.buttonbox(f"Updated Movie:\n\n{tabulate(output, headers=VIEW_HEADERS)}\n\nAnother Edit?", choices=['Yes', 'No'])
+
+                    if edit_catagory == "No":
+                        edit_repeat = False
+
+                elif edit_catagory == 'Genre':
+                    genre_call()
+                    new_genre_value = easygui.choicebox(f"Select new Rating for {edit_movie}:", choices=genre_list)
+
+                    conn.execute("""
+                    UPDATE movie_collection_table
+                    SET movie_rating = ?
+                    WHERE movie_name LIKE ?
+                    """, (new_genre_value, f'%{edit_movie}%'))
+                
+                    conn.commit()
+
+                    cursor.execute(f"""
+                        SELECT movie_collection_table.id, movie_name, movie_release_date, movie_rating, movie_run_time, genre
+                        FROM movie_collection_table
+                        INNER JOIN genre_table ON movie_collection_table.movie_genre = genre_table.ID
+                        WHERE movie_collection_table.movie_name LIKE ?
+                        """, (f'%{edit_movie}%',))
+
+
+                    output = cursor.fetchall()
+
+                    edit_catagory = easygui.buttonbox(f"Updated Movie:\n\n{tabulate(output, headers=VIEW_HEADERS)}\n\nAnother Edit?", choices=['Yes', 'No'])
+
+                    if edit_catagory == "No":
+                        edit_repeat = False
+                        
