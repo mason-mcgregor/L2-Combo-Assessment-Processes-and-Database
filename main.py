@@ -43,10 +43,10 @@ def search():
         choices = [row[0] for row in cursor.fetchall()]
 
 def genre_call():
-    cursor.execute("SELECT genre FROM genre_table")
+    cursor.execute("SELECT ID, genre FROM genre_table")
     genres = cursor.fetchall()
     global genre_list
-    genre_list = [genre[0] for genre in genres]
+    genre_list = [[genre[0],genre[1]] for genre in genres]
 
 def rating_call():
     cursor.execute("SELECT key FROM rating_table")
@@ -131,6 +131,8 @@ while True:
 
         movie_date = (""+movie_release_date[2]+"-"+movie_release_date[1]+"-"+movie_release_date[0]+"")
 
+        movie_genre = movie_genre.replace("[","").replace("]","").split(",")[0]
+
         conn.execute(f'''
         INSERT INTO movie_collection_table (movie_name, movie_release_date, movie_rating, movie_run_time, movie_genre)
         VALUES
@@ -138,7 +140,19 @@ while True:
         ''')
 
         conn.commit()
-        conn.close()
+
+        cursor.execute(f"""
+        SELECT movie_collection_table.id, movie_name, movie_release_date, movie_rating, movie_run_time, genre
+        FROM movie_collection_table
+        INNER JOIN genre_table ON movie_collection_table.movie_genre = genre_table.ID
+        WHERE movie_collection_table.movie_name LIKE ?
+        """, (f'%{movie_name}%',))
+
+        added_movie_output = cursor.fetchall()
+
+
+        added_movie = easygui.buttonbox(f"Added Movie:\n\n{tabulate(added_movie_output, headers=VIEW_HEADERS)}\n\nIs this correct?", choices=['Yes', 'No'])
+
 
     if menu_action == 'Delete':
         searched_movie = easygui.enterbox("What is the name of the movie you want to delete?")
@@ -262,30 +276,7 @@ while True:
                 elif edit_catagory == 'Genre':
                     genre_call()
                     new_genre_value = easygui.choicebox(f"Select new Rating for {edit_movie}:", choices=genre_list)
-                    if new_genre_value == "Action":
-                        new_genre_value = 1
-                    elif new_genre_value == "Animation":
-                        new_genre_value = 2
-                    elif new_genre_value == "Comedy":
-                        new_genre_value = 3
-                    elif new_genre_value == "Crime":
-                        new_genre_value = 4
-                    elif new_genre_value == "Drama":
-                        new_genre_value = 5
-                    elif new_genre_value == "Fantasy":
-                        new_genre_value = 6
-                    elif new_genre_value == "Horror":
-                        new_genre_value = 7
-                    elif new_genre_value == "Romance":
-                        new_genre_value = 8
-                    elif new_genre_value == "Science Fiction":
-                        new_genre_value = 9
-                    elif new_genre_value == "Thriller":
-                        new_genre_value = 10
-                    elif new_genre_value == "Mystery":
-                        new_genre_value = 11
-                    
-                    new_value = new_genre_value
+                    new_value = new_genre_value.replace("[","").replace("]","").split(",")[0]
                     data_type = "movie_genre"
                     name_changing = "no"
                     update_movie()
