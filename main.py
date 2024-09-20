@@ -150,9 +150,10 @@ while True:
 
         added_movie_output = cursor.fetchall()
 
-
         added_movie = easygui.buttonbox(f"Added Movie:\n\n{tabulate(added_movie_output, headers=VIEW_HEADERS)}\n\nIs this correct?", choices=['Yes', 'No'])
 
+        if added_movie == "no":
+            update_movie()
 
     if menu_action == 'Delete':
         searched_movie = easygui.enterbox("What is the name of the movie you want to delete?")
