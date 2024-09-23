@@ -1,6 +1,7 @@
 import sqlite3
 import easygui
 from tabulate import tabulate
+from datetime import datetime
 
 MENU_BUTTONS = ['Add', 'View', 'Search', 'Delete', 'Edit', 'Exit']
 MENU_TITLE = "Main menu"
@@ -14,6 +15,10 @@ items =""
 edit_repeat = True
 secret_message = False
 name_changing = False
+
+class CancelError(Exception):
+    pass
+
 
 def search():
     cursor.execute(f"""
@@ -123,8 +128,53 @@ while True:
 
         feild_names = ["Day", "Month", "Year"]
         movie_release_date = []
-        movie_name = easygui.enterbox("Eneter the name of the movie")
-        movie_release_date = easygui.multenterbox("ENter the movie release date", fields=feild_names)
+
+        valid_movie_name = False
+        while not valid_movie_name:
+            movie_name = easygui.enterbox("Enter the name of the movie")
+            if movie_name == None:
+                easygui.msgbox("Input Cancelled")
+                break
+            # test input for validity
+            if movie_name == "":
+                easygui.msgbox("Movie name can't be blank, please re-enter")
+            else:
+                valid_movie_name = True
+        if movie_name is None:
+            continue        
+
+        valid_movie_date = False
+        while not valid_movie_date:
+            # Get release date input
+            movie_release_date = easygui.multenterbox("Enter the movie release date", fields=field_names)
+
+            # Check if the user canceled the input box
+            if movie_release_date is None:
+                easygui.msgbox("Input cancelled.")
+                break
+
+            # Test input for validity before parsing the date
+            if any(field.strip() == "" for field in movie_release_date):
+                easygui.msgbox("Movie date can't be blank, please re-enter.")
+                continue  # Skip to the next iteration of the loop
+
+            try:
+                # Try to parse the date only after ensuring valid input
+                movie_date = datetime.strptime(f"{movie_release_date[2]}-{movie_release_date[1]}-{movie_release_date[0]}", "%Y-%m-%d").date()
+
+                # If the parsing is successful, set valid_movie_date to True
+                valid_movie_date = True
+                easygui.msgbox(f"Valid date entered: {movie_date}")
+
+            except (ValueError, TypeError):
+                # Handle incorrect date formats or type errors
+                easygui.msgbox("Invalid date format. Please try again.")
+
+            
+        if movie_release_date is None:
+            continue   
+
+
         movie_rating = easygui.choicebox("Movie Rating", choices=rating_list)
         movie_run_time = easygui.integerbox("Movie Run Time", upperbound=1000)
         movie_genre = easygui.choicebox("Movie Genre", choices=genre_list)
@@ -152,8 +202,6 @@ while True:
 
         added_movie = easygui.buttonbox(f"Added Movie:\n\n{tabulate(added_movie_output, headers=VIEW_HEADERS)}\n\nIs this correct?", choices=['Yes', 'No'])
 
-        if added_movie == "no":
-            update_movie()
 
     if menu_action == 'Delete':
         searched_movie = easygui.enterbox("What is the name of the movie you want to delete?")
