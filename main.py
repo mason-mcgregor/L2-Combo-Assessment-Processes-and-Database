@@ -263,7 +263,6 @@ while True:
             if not output:
                 easygui.msgbox("No movies found.")
             else:
-                VIEW_HEADERS = ['ID', 'Name', 'Release Date', 'Rating', 'Run Time', 'Genre']
                 formatted_output = tabulate(output, headers=VIEW_HEADERS)
 
                 cursor.execute(f"""
@@ -293,7 +292,9 @@ while True:
         else:
             easygui.msgbox("No movie name entered.")
         
-        searched_movie_movie = easygui.msgbox(f"Searched results:\n\n{formatted_output}")
+        searched_movie_results = easygui.buttonbox(f"Searched results:\n\n{formatted_output}", choices=["Edit", "Delete"])
+        if not searched_movie_results:  # Handle cancel or no selection
+            continue  # Exit if the user closes the window or doesn't select an option
         
     if menu_action == 'Edit':
         searched_movie = easygui.enterbox("What is the name of the movie you want to Search?")
