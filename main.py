@@ -177,8 +177,7 @@ while True:
             except (ValueError, TypeError):
                 # Handle incorrect date formats or type errors
                 easygui.msgbox("Invalid date format. Please try again.")
-
-            
+        
         if movie_release_date is None:
             continue   
 
@@ -273,7 +272,19 @@ while True:
                 
                 choices = [row[0] for row in cursor.fetchall()]
 
-                deleted_movie = easygui.choicebox(f"Select the movie to delete:\n\n{formatted_output}", choices=choices)
+                correct_delete_movie = False
+                while correct_delete_movie == False:
+                    deleted_movie = easygui.choicebox(f"Select the movie to delete:\n\n{formatted_output}", choices=choices)
+
+                    if deleted_movie == None:
+                        easygui.msgbox("Action Cancelled")
+                        break
+
+                    confirmed_delete_movie = easygui.buttonbox(f"Are you sure you want to delete {deleted_movie}", choices=["Yes", "No"])
+
+                    if confirmed_delete_movie == "Yes":
+                        correct_delete_movie = True
+
 
                 if deleted_movie:
                     cursor.execute("DELETE FROM movie_collection_table WHERE movie_name = ?", (deleted_movie,))
@@ -331,11 +342,25 @@ while True:
                 edit_catagory = easygui.choicebox(f"Selected Movie:\n\n{tabulate(output, headers=VIEW_HEADERS)}\n\nSelect the catagory to Edit:", choices=VIEW_HEADERS)
                 if not edit_catagory:  # Handle if no category is selected
                     easygui.msgbox("No category selected.")
-                    continue  # Exit if no category is selected
-
+                    edit_repeat = False  # Exit if no category is selected
 
                 if edit_catagory == 'ID':
-                    new_id_value = easygui.integerbox(f"Enter new ID for {edit_movie}:", lowerbound=1, upperbound=1000)
+                    valid_id = False
+                    while valid_id == False:
+                        new_id_value = easygui.integerbox(f"Enter new ID for {edit_movie}:", lowerbound=1, upperbound=1000)
+
+                        # Check if the new ID already exists in the database
+                        cursor.execute("""
+                            SELECT id FROM movie_collection_table WHERE id = ?
+                        """, (new_id_value,))
+                        existing_id = cursor.fetchone()
+
+                        if existing_id:  # If ID exists, notify the user
+                            easygui.msgbox(f"ID {new_id_value} is already taken. Please choose another one.")
+                            continue  # Exit to prompt for another ID
+                        else:
+                            valid_id = True
+
                     if new_id_value is None:
                         easygui.msgbox("No ID entered.")
                         continue  # Exit if no ID is entered
@@ -343,23 +368,72 @@ while True:
                     data_type = "id"
                     name_changing = "no"
                     update_movie()
-
-                    
+                   
                 elif edit_catagory == 'Name':
-                    new_name_value = easygui.enterbox(f"Enter new Name for {edit_movie}:")
-                    if not new_name_value:  # Ensure name isn't empty
-                        easygui.msgbox("No name entered.")
-                        continue  # Exit if no name is entered
+                    valid_new_movie_name = False
+                    while not valid_new_movie_name:
+                        new_name_value = easygui.enterbox(f"Enter new Name for {edit_movie}:")
+                        if new_name_value == None:
+                            easygui.msgbox("No name entered.")
+                            break
+                        # test input for validity
+                        if new_name_value == "":
+                            easygui.msgbox("Movie name can't be blank, please re-enter")
+                        else:
+                            valid_new_movie_name = True
+                    if new_name_value is None:
+                        continue        
+
                     new_value = new_name_value
                     data_type = "movie_name"
                     name_changing = "yes"
                     update_movie()
 
                 elif edit_catagory == 'Year':
-                    feild_names = ["Day", "Month", "Year"]
-                    movie_release_date = []
-                    new_movie_release_date = easygui.multenterbox("ENter the movie release date", fields=feild_names)
-                    new_movie_date = (""+new_movie_release_date[2]+"-"+new_movie_release_date[1]+"-"+new_movie_release_date[0]+"")
+
+                    valid_new_movie_date = False
+                    while not valid_new_movie_date:
+                        try:
+                            field_names = ["Day", "Month", "Year"]
+                            # Get release date input
+                            new_movie_release_date = easygui.multenterbox("ENter the movie release date", fields=field_names)
+
+                            # Check if the user canceled the input box
+                            if new_movie_release_date is None:
+                                easygui.msgbox("Input cancelled.")
+                                break
+
+                            # Test input for validity before parsing the date
+                            if any(field.strip() == "" for field in new_movie_release_date):
+                                easygui.msgbox("A feild has been left blank, re-enter.")
+                                continue  # Skip to the next iteration of the loop
+
+                            # Try to parse the date only after ensuring valid input
+                            new_movie_date = datetime.strptime(f"{new_movie_release_date[2]}-{new_movie_release_date[1]}-{new_movie_release_date[0]}", "%Y-%m-%d").date()
+
+                            # Define the lower boundary (Jan 1, 1888)
+                            lower_boundary = datetime(1888, 1, 1).date()
+                            # Define the current date as the upper boundary
+                            upper_boundary = datetime.now().date()
+
+                            # Check if the date is between Jan 1, 1888 and today's date
+                            if lower_boundary <= new_movie_date <= upper_boundary:
+                                easygui.msgbox(f"Valid movie release date: {new_movie_date}")
+                            else:
+                                easygui.msgbox(f"Invalid movie release date: {new_movie_date}")
+                                continue
+
+                            # If the parsing is successful, set valid_movie_date to True
+                            valid_new_movie_date = True
+
+                        except (ValueError, TypeError):
+                            # Handle incorrect date formats or type errors
+                            easygui.msgbox("Invalid date format. Please try again.")
+
+                        
+                    if new_movie_release_date is None:
+                        continue   
+
                     new_value = new_movie_date
                     data_type = "movie_release_date"
                     name_changing = "no"
@@ -396,3 +470,7 @@ while True:
                     data_type = "movie_genre"
                     name_changing = "no"
                     update_movie() 
+
+    if menu_action == "Exit":
+        easygui.msgbox("Bye")
+        quit()
