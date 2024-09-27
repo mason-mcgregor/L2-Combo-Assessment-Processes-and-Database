@@ -1,3 +1,4 @@
+"""This fle is used to manage a movie database."""
 import sqlite3
 import easygui
 from tabulate import tabulate
@@ -5,23 +6,27 @@ from datetime import datetime
 
 MENU_BUTTONS = ['Add', 'View', 'Search', 'Delete', 'Edit', 'Exit']
 MENU_TITLE = "Main menu"
-VIEW_HEADERS = ["ID","Name","Year","Rating","Length","Genre"]
-FILTER_CHOICES = ["Ascending", "Descending","Id", "Name", "Year", "Rating", "Length", "Genre"]
+VIEW_HEADERS = ["ID", "Name", "Year", "Rating", "Length", "Genre"]
+FILTER_CHOICES = ["Ascending", "Descending",
+                  "Id", "Name", "Year", "Rating", "Length", "Genre"]
 
 conn = sqlite3.connect('film-collection.db')
 cursor = conn.cursor()
 
-items =""
+items = ""
 edit_repeat = True
 secret_message = False
 name_changing = False
 
+
 def search():
-    cursor.execute(f"""
-    SELECT movie_collection_table.id, movie_name, movie_release_date, movie_rating, movie_run_time, genre 
-    FROM movie_collection_table 
-    INNER JOIN genre_table 
-    ON movie_collection_table.movie_genre = genre_table.ID 
+    """Search the database based off a searched movie."""
+    cursor.execute("""
+    SELECT movie_collection_table.id, movie_name,
+        movie_release_date, movie_rating, movie_run_time, genre
+    FROM movie_collection_table
+    INNER JOIN genre_table
+    ON movie_collection_table.movie_genre = genre_table.ID
     WHERE movie_collection_table.movie_name LIKE ?
     ORDER BY movie_collection_table.ID ASC
     """, (f'%{searched_movie}%',))
@@ -31,31 +36,36 @@ def search():
     if not output:
         easygui.msgbox("No movies found.")
     else:
-        VIEW_HEADERS = ['ID', 'Name', 'Release Date', 'Rating', 'Run Time', 'Genre']
         global formatted_output
         formatted_output = tabulate(output, headers=VIEW_HEADERS)
 
-        cursor.execute(f"""
-        SELECT movie_name 
-        FROM movie_collection_table 
+        cursor.execute("""
+        SELECT movie_name
+        FROM movie_collection_table
         WHERE movie_collection_table.movie_name LIKE ?
         """, (f'%{searched_movie}%',))
         global choices
         choices = [row[0] for row in cursor.fetchall()]
 
+
 def genre_call():
+    """Select all the genres from the genre table and add them to a list."""
     cursor.execute("SELECT ID, genre FROM genre_table")
     genres = cursor.fetchall()
     global genre_list
-    genre_list = [[genre[0],genre[1]] for genre in genres]
+    genre_list = [[genre[0], genre[1]] for genre in genres]
+
 
 def rating_call():
+    """Select all the ratings from the rating table and add them to a list."""
     cursor.execute("SELECT key FROM rating_table")
     ratings = cursor.fetchall()
     global rating_list
     rating_list = [rating[0] for rating in ratings]
 
+
 def update_movie():
+    """Update the values of a selected movie in the database."""
     global edit_movie
     conn.execute(f"""
         UPDATE movie_collection_table
@@ -69,10 +79,12 @@ def update_movie():
         edit_movie = new_name_value
 
     # Execute the SELECT query based on the (possibly) new movie name
-    cursor.execute(f"""
-        SELECT movie_collection_table.id, movie_name, movie_release_date, movie_rating, movie_run_time, genre
+    cursor.execute("""
+        SELECT movie_collection_table.id, movie_name,
+        movie_release_date, movie_rating, movie_run_time, genre
         FROM movie_collection_table
-        INNER JOIN genre_table ON movie_collection_table.movie_genre = genre_table.ID
+        INNER JOIN
+        genre_table ON movie_collection_table.movie_genre = genre_table.ID
         WHERE movie_collection_table.movie_name LIKE ?
         """, (f'%{edit_movie}%',))
 
@@ -81,22 +93,35 @@ def update_movie():
     global secret_message
     secret_message = True
 
-    edit_again = easygui.buttonbox(f"Updated Movie:\n\n{tabulate(updated_output, headers=VIEW_HEADERS)}\n\nAnother Edit?", choices=['Yes', 'No'])
+    edit_again = easygui.buttonbox("Updated Movie:\n\n"
+                                   f"{tabulate(updated_output,headers=VIEW_HEADERS)}"
+                                   "\n\nAnother Edit?", choices=['Yes', 'No'])
 
     if edit_again == "No":
         global edit_repeat
         edit_repeat = False
 
+
 while True:
 
-    menu_action = easygui.buttonbox("Welcome to your Movie Catalog!", title=MENU_TITLE, choices=MENU_BUTTONS)
+    menu_action = easygui.buttonbox("Welcome to your Movie Catalog!",
+                                    title=MENU_TITLE, choices=MENU_BUTTONS)
 
     if menu_action == 'View':
         sort = "ASC"
         filter = "movie_collection_table.ID"
         while not sort == "exit":
-            output = cursor.execute(f"SELECT movie_collection_table.id, movie_name, movie_release_date, movie_rating, movie_run_time, genre FROM movie_collection_table INNER JOIN genre_table ON movie_collection_table.movie_genre=genre_table.ID ORDER BY {filter} {sort}")
-            veiw_sort = easygui.choicebox(tabulate(output, headers=VIEW_HEADERS), choices=FILTER_CHOICES)
+            output = cursor.execute(f"""
+            SELECT
+            movie_collection_table.id, movie_name, movie_release_date,
+            movie_rating, movie_run_time, genre
+            FROM movie_collection_table
+            INNER JOIN genre_table ON
+            movie_collection_table.movie_genre=genre_table.ID
+            ORDER BY {filter} {sort}""")
+            veiw_sort = easygui.choicebox(
+                tabulate(output, headers=VIEW_HEADERS),
+                choices=FILTER_CHOICES)
             if veiw_sort == "Descending":
                 sort = "DESC"
             elif veiw_sort == "Ascending":
@@ -127,7 +152,7 @@ while True:
         valid_movie_name = False
         while not valid_movie_name:
             movie_name = easygui.enterbox("Enter the name of the movie")
-            if movie_name == None:
+            if movie_name is None:
                 easygui.msgbox("Input Cancelled")
                 break
             # test input for validity
@@ -136,14 +161,15 @@ while True:
             else:
                 valid_movie_name = True
         if movie_name is None:
-            continue        
+            continue
 
         valid_movie_date = False
         while not valid_movie_date:
             try:
                 field_names = ["Day", "Month", "Year"]
                 # Get release date input
-                movie_release_date = easygui.multenterbox("Enter the movie release date", fields=field_names)
+                movie_release_date = easygui.multenterbox(
+                    "Enter the movie release date", fields=field_names)
 
                 # Check if the user canceled the input box
                 if movie_release_date is None:
@@ -157,7 +183,6 @@ while True:
 
                 # Try to parse the date only after ensuring valid input
                 movie_date = datetime.strptime(f"{movie_release_date[2]}-{movie_release_date[1]}-{movie_release_date[0]}", "%Y-%m-%d").date()
-
 
                 # Define the lower boundary (Jan 1, 1888)
                 lower_boundary = datetime(1888, 1, 1).date()
@@ -177,27 +202,28 @@ while True:
             except (ValueError, TypeError):
                 # Handle incorrect date formats or type errors
                 easygui.msgbox("Invalid date format. Please try again.")
-        
-        if movie_release_date is None:
-            continue   
 
-        valid_movie_rating = False                
+        if movie_release_date is None:
+            continue
+
+        valid_movie_rating = False
         while not valid_movie_rating:
-            movie_rating = easygui.choicebox("Movie Rating", choices=rating_list)
-            if movie_rating == None:
+            movie_rating = easygui.choicebox("Movie Rating",
+                                             choices=rating_list)
+            if movie_rating is None:
                 easygui.msgbox("Input Cancelled")
                 break
 
             valid_movie_rating = True
 
         if movie_rating is None:
-            continue        
-
+            continue
 
         valid_movie_length = False
         while not valid_movie_length:
-            movie_run_time = easygui.integerbox("Movie Run Time", lowerbound=1, upperbound=1000)
-            if movie_run_time == None:
+            movie_run_time = easygui.integerbox("Movie Run Time",
+                                                lowerbound=1, upperbound=1000)
+            if movie_run_time is None:
                 easygui.msgbox("Input Cancelled")
                 break
             # test input for validity
@@ -206,43 +232,51 @@ while True:
             else:
                 valid_movie_length = True
         if movie_run_time is None:
-            continue        
+            continue
 
-        valid_movie_genre = False                
+        valid_movie_genre = False
         while not valid_movie_genre:
             movie_genre = easygui.choicebox("Movie Genre", choices=genre_list)
 
-            if movie_genre == None:
+            if movie_genre is None:
                 easygui.msgbox("Input Cancelled")
                 break
 
             valid_movie_genre = True
 
-        if movie_genre is None: 
-            continue        
+        if movie_genre is None:
+            continue
 
-        movie_date = (""+movie_release_date[2]+"-"+movie_release_date[1]+"-"+movie_release_date[0]+"")
+        movie_date = ("" + movie_release_date[2] + "-"
+                      + movie_release_date[1] +
+                      "-" + movie_release_date[0] + "")
 
-        movie_genre = movie_genre.replace("[","").replace("]","").split(",")[0]
+        movie_genre = movie_genre.replace("[", "") \
+            .replace("]", "").split(",")[0]
 
         conn.execute(f'''
-        INSERT INTO movie_collection_table (movie_name, movie_release_date, movie_rating, movie_run_time, movie_genre)
+        INSERT INTO movie_collection_table
+        (movie_name, movie_release_date, movie_rating,
+                     movie_run_time, movie_genre)
         VALUES
-            ('{movie_name}', '{movie_date}', '{movie_rating}', '{movie_run_time}', '{movie_genre}')              
+            ('{movie_name}', '{movie_date}',
+            '{movie_rating}', '{movie_run_time}', '{movie_genre}')
         ''')
 
         conn.commit()
 
         cursor.execute(f"""
-        SELECT movie_collection_table.id, movie_name, movie_release_date, movie_rating, movie_run_time, genre
+        SELECT movie_collection_table.id, movie_name,
+        movie_release_date, movie_rating, movie_run_time, genre
         FROM movie_collection_table
-        INNER JOIN genre_table ON movie_collection_table.movie_genre = genre_table.ID
+        INNER JOIN genre_table
+        ON movie_collection_table.movie_genre = genre_table.ID
         WHERE movie_collection_table.movie_name LIKE ?
         """, (f'%{movie_name}%',))
 
         added_movie_output = cursor.fetchall()
 
-        added_movie = easygui.msgbox(f"Added Movie:\n\n{tabulate(added_movie_output, headers=VIEW_HEADERS)}\n\n")
+        added_movie = easygui.msgbox(f"Added Movie:\n\n{tabulate(added_movie_output,headers=VIEW_HEADERS)}\n\n")
 
     if menu_action == 'Delete':
         searched_movie = easygui.enterbox("What is the name of the movie you want to delete?")     
